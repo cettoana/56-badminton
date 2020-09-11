@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/vue-multiselect@2.1.0/dist/vue-multiselect.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="width: 100vw;">
+    <div class="container-fluid ">
+      <div class="layout">
+        <div class="header">
+          <div class="mb-2 row">
+            <div class="col-12 bg-secondary" style="height: 20px;"></div>
+          </div>
+          <div class="d-flex">
+            <button class="btn btn-primary mr-1" @click="create">重建場次</button>
+            <button
+              class="btn mr-1"
+              :class="{
+                'btn-info': !isChoosingPeople,
+                'btn-warning': isChoosingPeople,
+              }"
+              @click="isChoosingPeople = !isChoosingPeople"
+            >
+              {{ isChoosingPeople ? '結束選角' : '球團選角' }}
+            </button>
+            <br>
+          </div>
+          <div class="d-flex">
+          </div>
+          <!-- 動態選角 -->
+          <div
+            v-if="isChoosingPeople"
+            class="row"
+          >
+            <hr class="col-12">
+            <div class="col-12 w-100">
+              <label class="typo__label">請設定本日角色</label>
+              <vue-multiselect
+                v-model="value"
+                tag-placeholder="Add this as new tag"
+                placeholder="Search or add a tag"
+                label="name"
+                track-by="code"
+                :options="options"
+                :multiple="true"
+                :taggable="true">
+              </vue-multiselect>
+            </div>
+            <hr class="col-12">
+            <button class="btn btn-primary ml-2" @click="createStar">增加好友</button>
+
+          </div>
+          <!-- 顯示的 table -->
+          <div 
+            v-if="!isChoosingPeople"  
+            class="row mt-2"
+          >
+            <div class="col-12">
+              <table class="table">
+                <thead class="thead-dark">
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">成員</th>
+                    <th scope="col">功能</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(game, index) in games"
+                    :key="`${game.code}$-{ index }`"
+                  >
+                    <th>{{ index + 1 }}</th>
+                    <td>
+                      <div v-if="!game.isEdit">{{ game.member.map(x => x.name).join(', ') }}</div>
+                      <div v-else>
+                        <vue-multiselect
+                          v-model="game.member"
+                          tag-placeholder="選人"
+                          placeholder="加人"
+                          label="name"
+                          track-by="code"
+                          :options="value"
+                          :multiple="true"
+                          :taggable="true"
+                          :max="4">
+                        </vue-multiselect>
+                      </div>
+                    </td>
+                    <td>
+                      <button
+                        v-if="!game.isEdit"
+                        class="btn btn-success mr-1"
+                        @click="games[index].isEdit = !games[index].isEdit">編輯</button>
+                      <button
+                        v-if="game.isEdit"
+                        class="btn btn-warning mr-1"
+                        @click=goGameSave(index)>完成</button>
+                      <button
+                        v-if="game.isEdit"
+                        class="btn btn-danger mr-1 mt-2"
+                        @click="deleteGame(index)">砍掉</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <button class="btn btn-primary" @click="createGame">新增場次</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+	</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js" integrity="sha512-QJsj3afWlCpnQ60XzzYE8Jb3IgHIK1BcGZox9rUSmRRq3Ocz9vQ1yR80eX2/b9jfx/UuT5zYWNdrM8Te/eCMhQ==" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/vue-multiselect@2.1.0"></script>
+
+  <script type="text/javascript">
+    Vue.component('vue-multiselect', window.VueMultiselect.default)
+
+    const game = {
+      isEdit: false,
+      member: []
+    }
+
+		const app = new Vue({
+      el: "#app",
+      data: {
+        isChoosingPeople: false,
+        value: [
+          { name: '偉凡', code: '1' },
+          { name: '恩恩', code: '2' },
+          { name: '阿比', code: '3' },
+        ],
+        options: [
+          { name: '偉凡', code: '1' },
+          { name: '恩恩', code: '2' },
+          { name: '阿比', code: '3' },
+          { name: '狼人', code: '4' },
+          { name: '瓜哥', code: '5' },
+          { name: '菜蟲', code: '6' },
+          { name: '姿婷', code: '7' },
+          { name: '佑銘', code: '8' },
+          { name: '嬌貴', code: '9' },
+          { name: '明卉', code: '10' },
+          { name: '丸子', code: '11' },
+          { name: '小白', code: '12' },
+          { name: '阿週', code: '13' },
+          { name: '晴晴', code: '14' },
+        ],
+        games: [],
+        superStars: [],
+      },
+      mounted() {
+        this.init();
+      },
+      watch: {
+        value() {
+          localStorage.setItem('members', JSON.stringify([...this.value]));
+        }
+      },
+      methods: {
+        init() {
+          const games = localStorage.getItem('games');
+          if (games) {
+            this.games = [...JSON.parse(games)];
+          } else {
+            this.games = Array(10).fill(0).map(x => Object.assign({}, game))
+          }
+          const members = localStorage.getItem('members');
+          if (members) {
+            this.value = [...JSON.parse(members)];
+            this.superStars = JSON.parse(members);
+          }
+          const stars = localStorage.getItem('stars');
+          if (stars) {
+            const oplong = this.options.length;
+            const starmans = JSON.parse(stars).map((x, i) => {
+              return {
+                name: x.name,
+                code: this.options.length + i
+              }
+            });
+            this.options = [...this.options, ...starmans];
+          }
+        },
+        create() {
+          const checkReZero = confirm('確定刪除嗎？\n資訊將不會保留。');
+          if (checkReZero) localStorage.removeItem('games');
+          location.reload();
+        },
+        deleteGame(index) {
+          this.games = this.games.filter((x, i) => index !== i );
+        },
+        createGame() {
+          this.games.push({
+            isEdit: false,
+            member: []
+          });
+        },
+        goGameSave(gameIndex) {
+          this.games[gameIndex].isEdit = !this.games[gameIndex].isEdit;
+          this.saveGame();
+        },
+        saveGame() {
+          localStorage.setItem('games', JSON.stringify(this.games));
+        },
+        createStar() {
+          const starName = prompt('輸入好友名稱');
+          const oplong = this.options.length;
+
+          this.superStars.push({
+            name: starName,
+            code: toString(this.options.length)
+          });
+          localStorage.setItem('stars', JSON.stringify([...this.superStars]))
+          this.options.push({
+            name: starName,
+            code: toString(this.options.length)
+          });
+
+        }
+      }
+
+    })		
+
+	</script>    
+</body>
+</html>
