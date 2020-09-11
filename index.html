@@ -178,18 +178,11 @@
           const members = localStorage.getItem('members');
           if (members) {
             this.value = [...JSON.parse(members)];
-            this.superStars = JSON.parse(members);
           }
           const stars = localStorage.getItem('stars');
           if (stars) {
-            const oplong = this.options.length;
-            const starmans = JSON.parse(stars).map((x, i) => {
-              return {
-                name: x.name,
-                code: this.options.length + i
-              }
-            });
-            this.options = [...this.options, ...starmans];
+            this.options = [...this.options, ...JSON.parse(stars)];
+            this.superStars = [...JSON.parse(stars)];
           }
         },
         create() {
@@ -219,14 +212,13 @@
 
           this.superStars.push({
             name: starName,
-            code: toString(this.options.length)
+            code: `${oplong}`
           });
           localStorage.setItem('stars', JSON.stringify([...this.superStars]))
           this.options.push({
             name: starName,
-            code: toString(this.options.length)
+            code: `${oplong}`
           });
-
         }
       }
 
